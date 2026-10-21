@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Bell, Menu, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,7 @@ import { getPageTitle } from '@/lib/navigation'
 
 export function Topbar({ user }: { user: AppUser }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
@@ -57,7 +58,11 @@ export function Topbar({ user }: { user: AppUser }) {
         <form
           role="search"
           className="relative hidden w-full max-w-md sm:block"
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={(e) => {
+            e.preventDefault()
+            const q = String(new FormData(e.currentTarget).get('q') ?? '').trim()
+            router.push(q ? `/customers?q=${encodeURIComponent(q)}` : '/customers')
+          }}
         >
           <label htmlFor="global-search" className="sr-only">
             Search customers
@@ -68,6 +73,7 @@ export function Topbar({ user }: { user: AppUser }) {
           />
           <Input
             id="global-search"
+            name="q"
             type="search"
             placeholder="Search customers, accounts…"
             className="h-9 bg-background/40 pl-9"

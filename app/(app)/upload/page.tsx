@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
-import { Upload } from 'lucide-react'
 
 import { PageHeader } from '@/components/app-shell/page-header'
-import { PlaceholderCard } from '@/components/app-shell/placeholder-card'
-import { Button } from '@/components/ui/button'
+import { UploadForm } from '@/components/upload/upload-form'
 
 export const metadata: Metadata = { title: 'Upload data' }
 
@@ -12,15 +10,9 @@ export default function UploadPage() {
     <>
       <PageHeader
         title="Upload data"
-        description="Import usage, billing, and support data to score customer health."
+        description="Import your customer data. Canary scores every account's health as it imports."
       />
-      <PlaceholderCard
-        icon={Upload}
-        title="Import a CSV"
-        description="File uploads aren't connected yet — this is a placeholder."
-      >
-        <Button disabled>Choose file</Button>
-      </PlaceholderCard>
+      <UploadForm />
     </>
   )
 }

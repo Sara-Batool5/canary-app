@@ -1,0 +1,41 @@
+name,email,plan,monthly_revenue,last_login,open_tickets,failed_payments,usage_change_percent
+Acme Analytics,billing@acmeanalytics.com,Growth,1250,2026-10-19,1,0,23
+Brightline Labs,billing@brightlinelabs.com,Growth,1060,2026-10-21,1,0,7
+Orbit Logistics,billing@orbitlogistics.com,Starter,330,2026-10-20,0,0,-1
+Halcyon Health,billing@halcyonhealth.com,Enterprise,6720,2026-10-18,0,0,13
+Fernway Studio,billing@fernwaystudio.com,Growth,1430,2026-10-18,0,0,15
+Pinecrest Retail,billing@pinecrestretai.com,Enterprise,6560,2026-09-19,5,2,-53
+Northwind Traders,billing@northwindtrade.com,Starter,340,2026-10-20,1,0,-8
+Lumen Robotics,billing@lumenrobotics.com,Enterprise,5320,2026-10-02,3,1,-23
+Cobalt Freight,billing@cobaltfreight.com,Scale,3360,2026-10-17,0,0,3
+Silverleaf Foods,billing@silverleaffood.com,Growth,1290,2026-10-19,0,0,11
+Quartz Finance,billing@quartzfinance.com,Growth,1010,2026-10-21,0,0,19
+Bluepeak Software,billing@bluepeaksoftwa.com,Scale,2790,2026-10-21,0,0,18
+Harbor & Co,billing@harborco.com,Growth,1470,2026-10-02,1,0,-15
+Redwood Legal,billing@redwoodlegal.com,Enterprise,7040,2026-10-09,1,1,-28
+Skyline Media,billing@skylinemedia.com,Enterprise,7430,2026-10-16,1,0,-5
+Tidewater Energy,billing@tidewaterenerg.com,Scale,2630,2026-10-06,3,0,-29
+Maple Street Bakery,billing@maplestreetbak.com,Enterprise,5830,2026-10-04,1,0,-10
+Vertex Dental,billing@vertexdental.com,Growth,1490,2026-10-16,1,0,-5
+Ironclad Security,billing@ironcladsecuri.com,Scale,2760,2026-10-16,1,0,-7
+Juniper Learning,billing@juniperlearnin.com,Growth,1440,2026-10-06,1,0,-11
+Kestrel Aviation,billing@kestrelaviatio.com,Enterprise,6510,2026-10-18,0,0,0
+Meridian Travel,billing@meridiantravel.com,Scale,2760,2026-10-16,0,0,16
+Nimbus Cloudworks,billing@nimbuscloudwor.com,Growth,1470,2026-09-29,4,3,-50
+Oakridge Realty,billing@oakridgerealty.com,Growth,1410,2026-09-11,5,2,-27
+Paragon Pharma,billing@paragonpharma.com,Enterprise,7280,2026-10-09,1,0,-27
+Ripple Payments,billing@ripplepayments.com,Enterprise,5390,2026-09-29,5,1,-66
+Summit Outfitters,billing@summitoutfitte.com,Starter,310,2026-10-20,0,0,12
+Trellis Agency,billing@trellisagency.com,Enterprise,6540,2026-10-09,3,0,-25
+Umbra Design,billing@umbradesign.com,Growth,1420,2026-10-20,0,0,24
+Violet Hotels,billing@violethotels.com,Starter,330,2026-09-29,5,2,-66
+Willow Wellness,billing@willowwellness.com,Enterprise,7320,2026-10-20,0,0,8
+Zenith Auto,billing@zenithauto.com,Scale,3630,2026-10-20,1,0,1
+Atlas Builders,billing@atlasbuilders.com,Scale,3600,2026-09-20,5,3,-64
+Beacon Education,billing@beaconeducatio.com,Starter,290,2026-09-19,4,2,-26
+Crescent Coffee,billing@crescentcoffee.com,Growth,990,2026-10-19,0,0,14
+Dune Interactive,billing@duneinteractiv.com,Starter,270,2026-10-04,1,0,-10
+Ember Fitness,billing@emberfitness.com,Starter,310,2026-10-18,0,0,20
+Fable Publishing,billing@fablepublishin.com,Enterprise,6610,2026-09-17,5,1,-56
+Gable Insurance,billing@gableinsurance.com,Starter,230,2026-10-04,1,0,-22
+Horizon Clinics,billing@horizonclinics.com,Enterprise,7200,2026-10-18,0,0,17

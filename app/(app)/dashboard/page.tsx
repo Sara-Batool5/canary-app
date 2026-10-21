@@ -1,58 +1,120 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { Upload } from 'lucide-react'
 
 import { PageHeader } from '@/components/app-shell/page-header'
 import { AttentionTable } from '@/components/dashboard/attention-table'
-import { RiskTrendChart } from '@/components/dashboard/risk-trend-chart'
+import { HealthDistribution } from '@/components/dashboard/health-distribution'
 import { StatCards } from '@/components/dashboard/stat-cards'
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatCompactCurrency, formatNumber } from '@/lib/format'
+import type { DbStatus } from '@/lib/scoring'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="flex items-center gap-2 text-xs text-muted-foreground">
-      <span
-        className="h-0.5 w-3 rounded-full"
-        style={{ backgroundColor: color }}
-        aria-hidden="true"
-      />
-      {label}
-    </span>
-  )
-}
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('customers')
+    .select('id, name, plan, monthly_revenue, health_status, risk_reasons')
+    .limit(5000)
 
-export default function DashboardPage() {
+  const customers = data ?? []
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Dashboard" description="A snapshot of churn risk across your customer base." />
+        <p role="alert" className="rounded-md bg-health-red/10 px-4 py-3 text-sm text-health-red">
+          We couldn&apos;t load your data: {error.message}
+        </p>
+      </>
+    )
+  }
+
+  if (customers.length === 0) {
+    return (
+      <>
+        <PageHeader title="Dashboard" description="A snapshot of churn risk across your customer base." />
+        <Card className="items-center gap-4 px-6 py-12 text-center">
+          <Upload className="size-6 text-muted-foreground" aria-hidden="true" />
+          <CardHeader className="justify-items-center px-0">
+            <CardTitle>No customer data yet</CardTitle>
+            <CardDescription>
+              Upload a CSV and Canary will score every account and show who needs attention.
+            </CardDescription>
+          </CardHeader>
+          <Link href="/upload" className={buttonVariants({ size: 'lg' })}>
+            Upload customer data
+          </Link>
+        </Card>
+      </>
+    )
+  }
+
+  const totals: Record<DbStatus, { count: number; revenue: number }> = {
+    green: { count: 0, revenue: 0 },
+    amber: { count: 0, revenue: 0 },
+    red: { count: 0, revenue: 0 },
+  }
+  for (const customer of customers) {
+    const status = (customer.health_status as DbStatus) in totals ? (customer.health_status as DbStatus) : 'green'
+    totals[status].count += 1
+    totals[status].revenue += Number(customer.monthly_revenue ?? 0)
+  }
+
+  const atRiskCount = totals.amber.count + totals.red.count
+  const revenueAtRisk = totals.amber.revenue + totals.red.revenue
+  const healthyShare = Math.round((totals.green.count / customers.length) * 100)
+
+  const attention = customers
+    .filter((c) => c.health_status === 'red' || c.health_status === 'amber')
+    .sort((a, b) => {
+      if (a.health_status !== b.health_status) return a.health_status === 'red' ? -1 : 1
+      return Number(b.monthly_revenue) - Number(a.monthly_revenue)
+    })
+    .slice(0, 5)
+
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        description="A snapshot of churn risk across your customer base."
-      />
+      <PageHeader title="Dashboard" description="A snapshot of churn risk across your customer base." />
       <div className="flex flex-col gap-6">
-        <StatCards />
+        <StatCards
+          stats={[
+            {
+              label: 'Total customers',
+              value: formatNumber(customers.length),
+              caption: `${healthyShare}% are healthy`,
+            },
+            {
+              label: 'At-risk customers',
+              value: formatNumber(atRiskCount),
+              caption: `${totals.red.count} critical · ${totals.amber.count} at risk`,
+            },
+            {
+              label: 'Revenue at risk',
+              value: formatCompactCurrency(revenueAtRisk),
+              caption: 'Monthly revenue from at-risk accounts',
+            },
+            {
+              label: 'Healthy customers',
+              value: formatNumber(totals.green.count),
+              caption: `${formatCompactCurrency(totals.green.revenue)} monthly revenue`,
+            },
+          ]}
+        />
 
-        <Card className="gap-4 py-6">
-          <CardHeader className="flex flex-col gap-3 px-6 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-col gap-1">
-              <CardTitle>At-risk accounts over time</CardTitle>
-              <CardDescription>Last 6 months</CardDescription>
-            </div>
-            <div className="flex items-center gap-4">
-              <LegendItem color="var(--accent)" label="At-risk accounts" />
-              <LegendItem color="var(--primary)" label="Revenue at risk" />
-            </div>
-          </CardHeader>
-          <div className="px-4">
-            <RiskTrendChart />
-          </div>
-        </Card>
+        <HealthDistribution
+          segments={[
+            { status: 'green', ...totals.green },
+            { status: 'amber', ...totals.amber },
+            { status: 'red', ...totals.red },
+          ]}
+        />
 
-        <AttentionTable />
+        <AttentionTable accounts={attention} />
       </div>
     </>
   )
