@@ -1,0 +1,232 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sora), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+
+  /*
+   * --accent (teal) is reserved for the future aurora background, so it is
+   * exposed as `aurora` only. shadcn's `accent` utilities (menu item and
+   * ghost hovers) map to a neutral surface so teal never leaks into UI.
+   */
+  --color-aurora: var(--accent);
+  --color-accent: var(--surface-hover);
+  --color-accent-foreground: var(--foreground);
+
+  --color-health-green: var(--health-green);
+  --color-health-amber: var(--health-amber);
+  --color-health-red: var(--health-red);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  color-scheme: dark;
+
+  --background: hsl(232, 44%, 7%);
+  --foreground: hsl(232, 30%, 94%);
+  --primary: hsl(258, 78%, 70%);
+  --primary-foreground: hsl(232, 44%, 8%);
+  --accent: hsl(178, 62%, 60%);
+  --muted-foreground: hsl(232, 14%, 62%);
+  --border: hsl(232, 26%, 18%);
+  --card: hsl(232, 38%, 11%);
+
+  --health-green: hsl(152, 60%, 50%);
+  --health-amber: hsl(38, 92%, 60%);
+  --health-red: hsl(0, 72%, 64%);
+
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --secondary: hsl(232, 30%, 15%);
+  --secondary-foreground: var(--foreground);
+  --muted: hsl(232, 30%, 15%);
+  --surface-hover: hsl(232, 30%, 15%);
+  --input: var(--border);
+  --ring: var(--primary);
+  --destructive: var(--health-red);
+
+  --chart-1: var(--primary);
+  --chart-2: hsl(258, 60%, 55%);
+  --chart-3: hsl(258, 40%, 40%);
+  --chart-4: var(--muted-foreground);
+  --chart-5: var(--border);
+
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--surface-hover);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--primary);
+
+  --radius: 0.625rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-variant-numeric: tabular-nums;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading font-semibold tracking-tight;
+  }
+}
+
+@utility surface-highlight {
+  box-shadow: inset 0 1px 0 0
+    color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  will-change: transform;
+}
+
+.aurora-teal {
+  top: -28vh;
+  right: -18vw;
+  width: min(70vw, 960px);
+  height: min(70vw, 960px);
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--accent) 14%, transparent) 0%,
+    transparent 68%
+  );
+  animation: aurora-drift-teal 32s ease-in-out infinite alternate;
+}
+
+.aurora-lavender {
+  top: -32vh;
+  left: -16vw;
+  width: min(64vw, 880px);
+  height: min(64vw, 880px);
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--primary) 12%, transparent) 0%,
+    transparent 68%
+  );
+  animation: aurora-drift-lavender 38s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift-teal {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-6vw, 8vh, 0) scale(1.08);
+  }
+}
+
+@keyframes aurora-drift-lavender {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7vw, 6vh, 0) scale(1.06);
+  }
+}
+
+.aurora-teal-lg {
+  top: -34vh;
+  right: -22vw;
+  width: min(100vw, 1320px);
+  height: min(100vw, 1320px);
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--accent) 20%, transparent) 0%,
+    transparent 66%
+  );
+  animation: aurora-drift-teal 32s ease-in-out infinite alternate;
+}
+
+.aurora-lavender-lg {
+  top: -38vh;
+  left: -22vw;
+  width: min(92vw, 1200px);
+  height: min(92vw, 1200px);
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--primary) 17%, transparent) 0%,
+    transparent 66%
+  );
+  animation: aurora-drift-lavender 38s ease-in-out infinite alternate;
+}
+
+.dot-grid {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--border) 85%, transparent) 1px,
+    transparent 1.5px
+  );
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 80%);
+}
+
+.glow-teal {
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in oklab, var(--accent) 22%, transparent) 0%,
+    transparent 70%
+  );
+  filter: blur(40px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-teal,
+  .aurora-lavender,
+  .aurora-teal-lg,
+  .aurora-lavender-lg {
+    animation: none;
+  }
+}
