@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Send } from 'lucide-react'
 
+import { OutcomeCard } from '@/components/customers/outcome-card'
 import { HealthBadge } from '@/components/health-badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -66,6 +67,14 @@ export default async function CustomerDetailPage({
     .maybeSingle()
 
   if (!customer) notFound()
+
+  const { data: outcome } = await supabase
+    .from('outcomes')
+    .select('result, outcome_date')
+    .eq('customer_id', id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
   const status = (customer.health_status ?? 'green') as DbStatus
   const reasons: string[] = customer.risk_reasons ?? []
@@ -136,6 +145,11 @@ export default async function CustomerDetailPage({
           </div>
         </Card>
       </div>
+
+      <OutcomeCard
+        customerId={customer.id}
+        initial={outcome as { result: 'saved' | 'churned'; outcome_date: string } | null}
+      />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         <Stat label="Monthly revenue" value={formatCurrency(customer.monthly_revenue)} />

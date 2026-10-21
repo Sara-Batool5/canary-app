@@ -22,6 +22,7 @@ export default async function DashboardPage() {
     .limit(5000)
 
   const customers = data ?? []
+  const { data: outcomeRows } = await supabase.from('outcomes').select('customer_id, result')
 
   if (error) {
     return (
@@ -69,8 +70,22 @@ export default async function DashboardPage() {
   const revenueAtRisk = totals.amber.revenue + totals.red.revenue
   const healthyShare = Math.round((totals.green.count / customers.length) * 100)
 
+  // Accounts that already have an outcome no longer need attention.
+  const resolved = new Set((outcomeRows ?? []).map((o) => o.customer_id))
+  const revenueById = new Map(customers.map((c) => [c.id, Number(c.monthly_revenue ?? 0)]))
+  let savedRevenue = 0
+  let savedCount = 0
+  for (const outcome of outcomeRows ?? []) {
+    if (outcome.result === 'saved') {
+      savedRevenue += revenueById.get(outcome.customer_id) ?? 0
+      savedCount += 1
+    }
+  }
+
   const attention = customers
-    .filter((c) => c.health_status === 'red' || c.health_status === 'amber')
+    .filter(
+      (c) => (c.health_status === 'red' || c.health_status === 'amber') && !resolved.has(c.id),
+    )
     .sort((a, b) => {
       if (a.health_status !== b.health_status) return a.health_status === 'red' ? -1 : 1
       return Number(b.monthly_revenue) - Number(a.monthly_revenue)
@@ -99,9 +114,12 @@ export default async function DashboardPage() {
               caption: 'Monthly revenue from at-risk accounts',
             },
             {
-              label: 'Healthy customers',
-              value: formatNumber(totals.green.count),
-              caption: `${formatCompactCurrency(totals.green.revenue)} monthly revenue`,
+              label: 'Revenue saved',
+              value: formatCompactCurrency(savedRevenue),
+              caption:
+                savedCount > 0
+                  ? `${savedCount} ${savedCount === 1 ? 'customer' : 'customers'} saved`
+                  : 'Mark outcomes on customer pages',
             },
           ]}
         />
