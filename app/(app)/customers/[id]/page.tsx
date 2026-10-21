@@ -5,6 +5,7 @@ import { ArrowLeft, Send } from 'lucide-react'
 
 import { OutcomeCard } from '@/components/customers/outcome-card'
 import { HealthBadge } from '@/components/health-badge'
+import { OutcomeBadge } from '@/components/outcome-badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatDate, formatDaysAgo } from '@/lib/format'
@@ -100,7 +101,11 @@ export default async function CustomerDetailPage({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <HealthBadge status={toBadgeStatus(status)} />
+            {outcome ? (
+              <OutcomeBadge result={outcome.result} />
+            ) : (
+              <HealthBadge status={toBadgeStatus(status)} />
+            )}
             <Link
               href={`/outreach?customer=${customer.id}`}
               className={buttonVariants({ size: 'lg' })}

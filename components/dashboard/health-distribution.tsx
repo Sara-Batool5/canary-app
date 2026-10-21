@@ -5,14 +5,20 @@ import type { DbStatus } from '@/lib/scoring'
 
 type Segment = { status: DbStatus; count: number; revenue: number }
 
-export function HealthDistribution({ segments }: { segments: Segment[] }) {
+export function HealthDistribution({
+  segments,
+  note,
+}: {
+  segments: Segment[]
+  note?: string
+}) {
   const total = segments.reduce((sum, segment) => sum + segment.count, 0)
 
   return (
     <Card className="gap-5 py-6">
       <CardHeader className="px-6">
         <CardTitle>Health breakdown</CardTitle>
-        <CardDescription>How your {total} customers are doing right now.</CardDescription>
+        <CardDescription>How your {total} open accounts are doing right now.</CardDescription>
       </CardHeader>
 
       <div className="flex flex-col gap-6 px-6">
@@ -56,6 +62,7 @@ export function HealthDistribution({ segments }: { segments: Segment[] }) {
             </li>
           ))}
         </ul>
+        {note && <p className="text-xs text-muted-foreground">{note}</p>}
       </div>
     </Card>
   )

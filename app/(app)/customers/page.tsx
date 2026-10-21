@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 
 import { PageHeader } from '@/components/app-shell/page-header'
 import { HealthBadge } from '@/components/health-badge'
+import { OutcomeBadge } from '@/components/outcome-badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -20,6 +21,8 @@ const FILTERS = [
   { label: 'Healthy', value: 'green' },
   { label: 'At risk', value: 'amber' },
   { label: 'Critical', value: 'red' },
+  { label: 'Saved', value: 'saved' },
+  { label: 'Churned', value: 'churned' },
 ]
 
 export default async function CustomersPage({
@@ -29,7 +32,7 @@ export default async function CustomersPage({
 }) {
   const { status = '', q = '' } = await searchParams
   const query = q.trim()
-  const activeStatus = ['green', 'amber', 'red'].includes(status) ? status : ''
+  const activeStatus = ['green', 'amber', 'red', 'saved', 'churned'].includes(status) ? status : ''
 
   const supabase = await createClient()
   let request = supabase
@@ -37,13 +40,28 @@ export default async function CustomersPage({
     .select('id, name, email, plan, monthly_revenue, last_login, health_score, health_status')
     .order('health_score', { ascending: true })
     .order('monthly_revenue', { ascending: false })
-    .limit(500)
+    .limit(1000)
 
-  if (activeStatus) request = request.eq('health_status', activeStatus)
   if (query) request = request.ilike('name', `%${query.replace(/[%,]/g, '')}%`)
 
-  const { data, error } = await request
-  const customers = data ?? []
+  const [{ data, error }, { data: outcomeRows }] = await Promise.all([
+    request,
+    supabase.from('outcomes').select('customer_id, result'),
+  ])
+  const outcomeById = new Map<string, string>(
+    (outcomeRows ?? []).map((o) => [o.customer_id, o.result as string]),
+  )
+
+  // Health filters show open accounts only. Saved and churned accounts have their own filters.
+  const customers = (data ?? [])
+    .filter((c) => {
+      const outcome = outcomeById.get(c.id)
+      if (activeStatus === 'saved' || activeStatus === 'churned') return outcome === activeStatus
+      if (activeStatus) return !outcome && c.health_status === activeStatus
+      return true
+    })
+    // Open accounts first, resolved accounts last (order inside each group is kept).
+    .sort((a, b) => Number(outcomeById.has(a.id)) - Number(outcomeById.has(b.id)))
 
   const hrefFor = (value: string) => {
     const params = new URLSearchParams()
@@ -166,7 +184,11 @@ export default async function CustomersPage({
                       {customer.health_score ?? '—'}
                     </td>
                     <td className="px-6 py-3">
-                      <HealthBadge status={toBadgeStatus(customer.health_status)} />
+                      {outcomeById.has(customer.id) ? (
+                        <OutcomeBadge result={outcomeById.get(customer.id) as string} />
+                      ) : (
+                        <HealthBadge status={toBadgeStatus(customer.health_status)} />
+                      )}
                     </td>
                   </tr>
                 ))}

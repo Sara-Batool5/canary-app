@@ -30,7 +30,13 @@ export default async function OutreachPage({
     .order('monthly_revenue', { ascending: false })
     .limit(50)
 
-  let customers: OutreachCustomer[] = (atRisk ?? []) as OutreachCustomer[]
+  // Accounts that are already saved or churned no longer need outreach.
+  const { data: outcomeRows } = await supabase.from('outcomes').select('customer_id')
+  const resolved = new Set((outcomeRows ?? []).map((o) => o.customer_id))
+
+  let customers: OutreachCustomer[] = ((atRisk ?? []) as OutreachCustomer[]).filter(
+    (c) => !resolved.has(c.id),
+  )
 
   if (focusId) {
     const existing = customers.find((c) => c.id === focusId)

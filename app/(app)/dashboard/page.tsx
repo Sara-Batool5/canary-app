@@ -55,36 +55,55 @@ export default async function DashboardPage() {
     )
   }
 
+  // Saved and churned accounts are "resolved": they leave the risk numbers.
+  const outcomeById = new Map<string, string>(
+    (outcomeRows ?? []).map((o) => [o.customer_id, o.result as string]),
+  )
+
   const totals: Record<DbStatus, { count: number; revenue: number }> = {
     green: { count: 0, revenue: 0 },
     amber: { count: 0, revenue: 0 },
     red: { count: 0, revenue: 0 },
   }
+  let savedCount = 0
+  let churnedCount = 0
+  let savedRevenue = 0
+
   for (const customer of customers) {
-    const status = (customer.health_status as DbStatus) in totals ? (customer.health_status as DbStatus) : 'green'
+    const revenue = Number(customer.monthly_revenue ?? 0)
+    const outcome = outcomeById.get(customer.id)
+    if (outcome === 'saved') {
+      savedCount += 1
+      savedRevenue += revenue
+      continue
+    }
+    if (outcome === 'churned') {
+      churnedCount += 1
+      continue
+    }
+    const status: DbStatus =
+      customer.health_status === 'red' || customer.health_status === 'amber'
+        ? customer.health_status
+        : 'green'
     totals[status].count += 1
-    totals[status].revenue += Number(customer.monthly_revenue ?? 0)
+    totals[status].revenue += revenue
   }
 
+  const openCount = totals.green.count + totals.amber.count + totals.red.count
+  const activeCount = customers.length - churnedCount
   const atRiskCount = totals.amber.count + totals.red.count
   const revenueAtRisk = totals.amber.revenue + totals.red.revenue
-  const healthyShare = Math.round((totals.green.count / customers.length) * 100)
-
-  // Accounts that already have an outcome no longer need attention.
-  const resolved = new Set((outcomeRows ?? []).map((o) => o.customer_id))
-  const revenueById = new Map(customers.map((c) => [c.id, Number(c.monthly_revenue ?? 0)]))
-  let savedRevenue = 0
-  let savedCount = 0
-  for (const outcome of outcomeRows ?? []) {
-    if (outcome.result === 'saved') {
-      savedRevenue += revenueById.get(outcome.customer_id) ?? 0
-      savedCount += 1
-    }
-  }
+  const healthyShare = openCount > 0 ? Math.round((totals.green.count / openCount) * 100) : 0
+  const resolvedCount = savedCount + churnedCount
+  const resolvedNote =
+    resolvedCount > 0
+      ? `${savedCount} saved and ${churnedCount} churned ${resolvedCount === 1 ? 'account is' : 'accounts are'} not counted here.`
+      : undefined
 
   const attention = customers
     .filter(
-      (c) => (c.health_status === 'red' || c.health_status === 'amber') && !resolved.has(c.id),
+      (c) =>
+        (c.health_status === 'red' || c.health_status === 'amber') && !outcomeById.has(c.id),
     )
     .sort((a, b) => {
       if (a.health_status !== b.health_status) return a.health_status === 'red' ? -1 : 1
@@ -100,8 +119,11 @@ export default async function DashboardPage() {
           stats={[
             {
               label: 'Total customers',
-              value: formatNumber(customers.length),
-              caption: `${healthyShare}% are healthy`,
+              value: formatNumber(activeCount),
+              caption:
+                resolvedCount > 0
+                  ? `${savedCount} saved · ${churnedCount} churned`
+                  : `${healthyShare}% are healthy`,
             },
             {
               label: 'At-risk customers',
@@ -111,7 +133,7 @@ export default async function DashboardPage() {
             {
               label: 'Revenue at risk',
               value: formatCompactCurrency(revenueAtRisk),
-              caption: 'Monthly revenue from at-risk accounts',
+              caption: 'Monthly revenue from open at-risk accounts',
             },
             {
               label: 'Revenue saved',
@@ -125,6 +147,7 @@ export default async function DashboardPage() {
         />
 
         <HealthDistribution
+          note={resolvedNote}
           segments={[
             { status: 'green', ...totals.green },
             { status: 'amber', ...totals.amber },
