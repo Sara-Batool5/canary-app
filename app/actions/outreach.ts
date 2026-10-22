@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
+import { CUSTOMER_COLUMNS, getScoringConfig, scoreCustomer } from '@/lib/customers'
 import type { OutreachRow, OutreachStatus, Tone } from '@/lib/outreach'
 import { daysSince } from '@/lib/scoring'
 import { createClient } from '@/lib/supabase/server'
@@ -49,12 +50,13 @@ export async function generateOutreach(
     }
   }
 
-  const { data: customer } = await supabase
+  const { data: rawCustomer } = await supabase
     .from('customers')
-    .select('name, plan, last_login, risk_reasons')
+    .select(CUSTOMER_COLUMNS)
     .eq('id', customerId)
     .maybeSingle()
-  if (!customer) return { ok: false, error: 'Customer not found.' }
+  if (!rawCustomer) return { ok: false, error: 'Customer not found.' }
+  const customer = scoreCustomer(rawCustomer, getScoringConfig(user))
 
   const signals: string[] = customer.risk_reasons ?? []
   const idle = daysSince(customer.last_login)

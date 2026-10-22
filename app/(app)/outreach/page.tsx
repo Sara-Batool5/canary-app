@@ -6,13 +6,13 @@ import { PageHeader } from '@/components/app-shell/page-header'
 import { OutreachCard, type OutreachCustomer } from '@/components/outreach/outreach-card'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { CUSTOMER_COLUMNS, getScoringConfig, scoreCustomers } from '@/lib/customers'
 import type { OutreachRow } from '@/lib/outreach'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: 'Outreach' }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const COLUMNS = 'id, name, email, plan, monthly_revenue, health_status, risk_reasons'
 
 export default async function OutreachPage({
   searchParams,
@@ -23,12 +23,19 @@ export default async function OutreachPage({
   const focusId = UUID.test(focusParam) ? focusParam : null
 
   const supabase = await createClient()
-  const { data: atRisk, error } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const config = getScoringConfig(user)
+  const { data: allRows, error } = await supabase
     .from('customers')
-    .select(COLUMNS)
-    .in('health_status', ['red', 'amber'])
-    .order('monthly_revenue', { ascending: false })
-    .limit(50)
+    .select(CUSTOMER_COLUMNS)
+    .limit(5000)
+  const scored = scoreCustomers(allRows, config)
+  const atRisk = scored
+    .filter((c) => c.health_status === 'red' || c.health_status === 'amber')
+    .sort((a, b) => b.monthly_revenue - a.monthly_revenue)
+    .slice(0, 50)
 
   // Accounts that are already saved or churned no longer need outreach.
   const { data: outcomeRows } = await supabase.from('outcomes').select('customer_id')
@@ -43,11 +50,7 @@ export default async function OutreachPage({
     if (existing) {
       customers = [existing, ...customers.filter((c) => c.id !== focusId)]
     } else {
-      const { data: extra } = await supabase
-        .from('customers')
-        .select(COLUMNS)
-        .eq('id', focusId)
-        .maybeSingle()
+      const extra = scored.find((c) => c.id === focusId)
       if (extra) customers = [extra as OutreachCustomer, ...customers]
     }
   }

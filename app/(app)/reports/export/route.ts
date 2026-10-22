@@ -1,3 +1,4 @@
+import { CUSTOMER_COLUMNS, getScoringConfig, scoreCustomers } from '@/lib/customers'
 import { createClient } from '@/lib/supabase/server'
 
 const COLUMNS = [
@@ -33,13 +34,7 @@ export async function GET() {
   if (!user) return new Response('Please log in.', { status: 401 })
 
   const [customersRes, outcomesRes] = await Promise.all([
-    supabase
-      .from('customers')
-      .select(
-        'id, name, email, plan, monthly_revenue, last_login, open_tickets, failed_payments, usage_change_percent, health_score, health_status, risk_reasons',
-      )
-      .order('health_score', { ascending: true })
-      .limit(5000),
+    supabase.from('customers').select(CUSTOMER_COLUMNS).limit(5000),
     supabase.from('outcomes').select('customer_id, result').limit(5000),
   ])
 
@@ -49,7 +44,10 @@ export async function GET() {
 
   const outcomeById = new Map((outcomesRes.data ?? []).map((o) => [o.customer_id, o.result]))
   const lines = [COLUMNS.join(',')]
-  for (const customer of customersRes.data ?? []) {
+  const scored = scoreCustomers(customersRes.data, getScoringConfig(user)).sort(
+    (a, b) => a.health_score - b.health_score,
+  )
+  for (const customer of scored) {
     const row: Record<string, unknown> = {
       ...customer,
       outcome: outcomeById.get(customer.id) ?? '',

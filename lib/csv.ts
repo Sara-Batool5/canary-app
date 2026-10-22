@@ -1,4 +1,9 @@
-import { computeHealth, type DbStatus } from '@/lib/scoring'
+import {
+  computeHealth,
+  DEFAULT_SCORING,
+  type DbStatus,
+  type ScoringConfig,
+} from '@/lib/scoring'
 
 export type ParsedCustomer = {
   name: string
@@ -18,6 +23,8 @@ export type ParseResult = {
   customers: ParsedCustomer[]
   errors: string[]
   totalRows: number
+  /** Which optional/required columns were found in the file. */
+  columns: string[]
 }
 
 export const MAX_ROWS = 2000
@@ -109,7 +116,10 @@ function toIsoDate(value: string | undefined): string | null {
   return `${y}-${m}-${d}`
 }
 
-export function parseCustomersCsv(text: string): ParseResult {
+export function parseCustomersCsv(
+  text: string,
+  config: ScoringConfig = DEFAULT_SCORING,
+): ParseResult {
   const rows = parseCsv(text)
   const errors: string[] = []
 
@@ -118,6 +128,7 @@ export function parseCustomersCsv(text: string): ParseResult {
       customers: [],
       errors: ['The file needs a header row and at least one customer row.'],
       totalRows: 0,
+      columns: [],
     }
   }
 
@@ -136,6 +147,7 @@ export function parseCustomersCsv(text: string): ParseResult {
         `Missing required column(s): ${missing.join(', ')}. Download the template to see the expected format.`,
       ],
       totalRows: rows.length - 1,
+      columns: [],
     }
   }
 
@@ -145,6 +157,7 @@ export function parseCustomersCsv(text: string): ParseResult {
       customers: [],
       errors: [`This file has ${dataRows.length} rows. The limit is ${MAX_ROWS} per upload.`],
       totalRows: dataRows.length,
+      columns: [],
     }
   }
 
@@ -173,7 +186,7 @@ export function parseCustomersCsv(text: string): ParseResult {
       open_tickets: openTickets,
       failed_payments: failedPayments,
       usage_change_percent: usageChange,
-    })
+    }, config)
 
     customers.push({
       name,
@@ -190,5 +203,5 @@ export function parseCustomersCsv(text: string): ParseResult {
     })
   })
 
-  return { customers, errors, totalRows: dataRows.length }
+  return { customers, errors, totalRows: dataRows.length, columns: Object.keys(columnIndex) }
 }

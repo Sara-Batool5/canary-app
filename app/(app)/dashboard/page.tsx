@@ -8,6 +8,7 @@ import { HealthDistribution } from '@/components/dashboard/health-distribution'
 import { StatCards } from '@/components/dashboard/stat-cards'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { CUSTOMER_COLUMNS, getScoringConfig, scoreCustomers } from '@/lib/customers'
 import { formatCompactCurrency, formatNumber } from '@/lib/format'
 import type { DbStatus } from '@/lib/scoring'
 import { createClient } from '@/lib/supabase/server'
@@ -16,12 +17,13 @@ export const metadata: Metadata = { title: 'Dashboard' }
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('customers')
-    .select('id, name, plan, monthly_revenue, health_status, risk_reasons')
-    .limit(5000)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data, error } = await supabase.from('customers').select(CUSTOMER_COLUMNS).limit(5000)
 
-  const customers = data ?? []
+  // Health is calculated live from the raw data and your scoring rules in Settings.
+  const customers = scoreCustomers(data, getScoringConfig(user))
   const { data: outcomeRows } = await supabase.from('outcomes').select('customer_id, result')
 
   if (error) {

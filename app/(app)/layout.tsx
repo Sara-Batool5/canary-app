@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { AuroraBackground } from '@/components/app-shell/aurora-background'
 import { SidebarContent } from '@/components/app-shell/sidebar-content'
 import { Topbar } from '@/components/app-shell/topbar'
+import { getScoringConfig } from '@/lib/customers'
 import { getNotifications } from '@/lib/notifications'
 import { createClient } from '@/lib/supabase/server'
 import { toAppUser } from '@/lib/user'
@@ -18,7 +19,7 @@ export default async function AppLayout({
   if (!user) redirect('/login')
 
   const appUser = toAppUser(user)
-  const notifications = await getNotifications(supabase)
+  const notifications = await getNotifications(supabase, getScoringConfig(user))
 
   return (
     <div className="relative isolate min-h-dvh">

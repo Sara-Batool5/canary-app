@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { CUSTOMER_COLUMNS, scoreCustomers } from '@/lib/customers'
 import { formatCurrency } from '@/lib/format'
+import type { ScoringConfig } from '@/lib/scoring'
 
 export type AppNotification = {
   id: string
@@ -13,15 +15,13 @@ export type AppNotification = {
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
 
-export async function getNotifications(supabase: SupabaseClient): Promise<AppNotification[]> {
+export async function getNotifications(
+  supabase: SupabaseClient,
+  config: ScoringConfig,
+): Promise<AppNotification[]> {
   try {
-    const [totalRes, atRiskRes, outcomesRes, outreachRes] = await Promise.all([
-      supabase.from('customers').select('id', { count: 'exact', head: true }),
-      supabase
-        .from('customers')
-        .select('id, name, monthly_revenue, health_status')
-        .in('health_status', ['red', 'amber'])
-        .limit(2000),
+    const [customersRes, outcomesRes, outreachRes] = await Promise.all([
+      supabase.from('customers').select(CUSTOMER_COLUMNS).limit(5000),
       supabase.from('outcomes').select('customer_id').limit(5000),
       supabase
         .from('outreach')
@@ -30,7 +30,8 @@ export async function getNotifications(supabase: SupabaseClient): Promise<AppNot
         .limit(5000),
     ])
 
-    const total = totalRes.count ?? 0
+    const scored = scoreCustomers(customersRes.data, config)
+    const total = scored.length
     if (total === 0) {
       return [
         {
@@ -45,7 +46,9 @@ export async function getNotifications(supabase: SupabaseClient): Promise<AppNot
     }
 
     const resolved = new Set((outcomesRes.data ?? []).map((o) => o.customer_id as string))
-    const open = (atRiskRes.data ?? []).filter((c) => !resolved.has(c.id))
+    const open = scored.filter(
+      (c) => (c.health_status === 'red' || c.health_status === 'amber') && !resolved.has(c.id),
+    )
     const critical = open
       .filter((c) => c.health_status === 'red')
       .sort((a, b) => Number(b.monthly_revenue) - Number(a.monthly_revenue))

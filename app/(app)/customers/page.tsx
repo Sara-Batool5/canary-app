@@ -8,6 +8,7 @@ import { OutcomeBadge } from '@/components/outcome-badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { CUSTOMER_COLUMNS, getScoringConfig, scoreCustomers } from '@/lib/customers'
 import { daysSince } from '@/lib/scoring'
 import { formatCurrency, formatDaysAgo } from '@/lib/format'
 import { toBadgeStatus } from '@/lib/health'
@@ -37,12 +38,15 @@ export default async function CustomersPage({
   const supabase = await createClient()
   let request = supabase
     .from('customers')
-    .select('id, name, email, plan, monthly_revenue, last_login, health_score, health_status')
-    .order('health_score', { ascending: true })
-    .order('monthly_revenue', { ascending: false })
+    .select(CUSTOMER_COLUMNS)
     .limit(1000)
 
   if (query) request = request.ilike('name', `%${query.replace(/[%,]/g, '')}%`)
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const config = getScoringConfig(user)
 
   const [{ data, error }, { data: outcomeRows }] = await Promise.all([
     request,
@@ -53,15 +57,20 @@ export default async function CustomersPage({
   )
 
   // Health filters show open accounts only. Saved and churned accounts have their own filters.
-  const customers = (data ?? [])
+  const customers = scoreCustomers(data, config)
     .filter((c) => {
       const outcome = outcomeById.get(c.id)
       if (activeStatus === 'saved' || activeStatus === 'churned') return outcome === activeStatus
       if (activeStatus) return !outcome && c.health_status === activeStatus
       return true
     })
-    // Open accounts first, resolved accounts last (order inside each group is kept).
-    .sort((a, b) => Number(outcomeById.has(a.id)) - Number(outcomeById.has(b.id)))
+    // Open accounts first (lowest score first), resolved accounts last.
+    .sort(
+      (a, b) =>
+        Number(outcomeById.has(a.id)) - Number(outcomeById.has(b.id)) ||
+        a.health_score - b.health_score ||
+        b.monthly_revenue - a.monthly_revenue,
+    )
 
   const hrefFor = (value: string) => {
     const params = new URLSearchParams()

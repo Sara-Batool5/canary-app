@@ -8,6 +8,7 @@ import { HealthBadge } from '@/components/health-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { getScoringConfig, scoreCustomer } from '@/lib/customers'
 import { formatCurrency, formatDate, formatDaysAgo } from '@/lib/format'
 import { statusColors, toBadgeStatus } from '@/lib/health'
 import { daysSince, type DbStatus } from '@/lib/scoring'
@@ -61,13 +62,19 @@ export default async function CustomerDetailPage({
 }) {
   const { id } = await params
   const supabase = await createClient()
-  const { data: customer } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data: rawCustomer } = await supabase
     .from('customers')
     .select('*')
     .eq('id', id)
     .maybeSingle()
 
-  if (!customer) notFound()
+  if (!rawCustomer) notFound()
+
+  // Health is calculated live from the raw data and your scoring rules in Settings.
+  const customer = scoreCustomer(rawCustomer, getScoringConfig(user))
 
   const { data: outcome } = await supabase
     .from('outcomes')
@@ -77,8 +84,8 @@ export default async function CustomerDetailPage({
     .limit(1)
     .maybeSingle()
 
-  const status = (customer.health_status ?? 'green') as DbStatus
-  const reasons: string[] = customer.risk_reasons ?? []
+  const status = customer.health_status as DbStatus
+  const reasons: string[] = customer.risk_reasons
   const usage = Number(customer.usage_change_percent ?? 0)
 
   return (
