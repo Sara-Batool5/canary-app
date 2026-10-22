@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Menu, Search } from 'lucide-react'
+import { Menu, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,11 +14,18 @@ import {
 } from '@/components/ui/sheet'
 import { ProfileMenu } from '@/components/app-shell/profile-menu'
 import { SidebarContent } from '@/components/app-shell/sidebar-content'
-import { notificationCount } from '@/lib/mock-data'
+import { NotificationsMenu } from '@/components/app-shell/notifications-menu'
+import type { AppNotification } from '@/lib/notifications'
 import type { AppUser } from '@/lib/user'
 import { getPageTitle } from '@/lib/navigation'
 
-export function Topbar({ user }: { user: AppUser }) {
+export function Topbar({
+  user,
+  notifications,
+}: {
+  user: AppUser
+  notifications: AppNotification[]
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -82,20 +89,7 @@ export function Topbar({ user }: { user: AppUser }) {
       </div>
 
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative text-muted-foreground"
-          aria-label={`Notifications, ${notificationCount} unread`}
-        >
-          <Bell />
-          {notificationCount > 0 && (
-            <span
-              className="absolute top-1.5 right-1.5 size-2 rounded-full bg-aurora ring-2 ring-card"
-              aria-hidden="true"
-            />
-          )}
-        </Button>
+        <NotificationsMenu notifications={notifications} />
         <ProfileMenu user={user} />
       </div>
     </header>

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { AuroraBackground } from '@/components/app-shell/aurora-background'
 import { SidebarContent } from '@/components/app-shell/sidebar-content'
 import { Topbar } from '@/components/app-shell/topbar'
+import { getNotifications } from '@/lib/notifications'
 import { createClient } from '@/lib/supabase/server'
 import { toAppUser } from '@/lib/user'
 
@@ -17,6 +18,7 @@ export default async function AppLayout({
   if (!user) redirect('/login')
 
   const appUser = toAppUser(user)
+  const notifications = await getNotifications(supabase)
 
   return (
     <div className="relative isolate min-h-dvh">
@@ -25,7 +27,7 @@ export default async function AppLayout({
         <SidebarContent user={appUser} />
       </aside>
       <div className="flex min-h-dvh flex-col lg:pl-64">
-        <Topbar user={appUser} />
+        <Topbar user={appUser} notifications={notifications} />
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
