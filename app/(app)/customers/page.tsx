@@ -109,9 +109,9 @@ export default async function CustomersPage({
           })}
         </div>
 
-        <form action="/customers" className="flex items-center gap-2">
+        <form action="/customers" className="flex w-full items-center gap-2 sm:w-auto">
           {activeStatus && <input type="hidden" name="status" value={activeStatus} />}
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <Search
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
@@ -122,7 +122,7 @@ export default async function CustomersPage({
               defaultValue={query}
               placeholder="Search by name…"
               aria-label="Search customers by name"
-              className="h-9 w-56 pl-9"
+              className="h-9 w-full pl-9 sm:w-56"
             />
           </div>
           <Button type="submit" variant="outline" className="h-9">

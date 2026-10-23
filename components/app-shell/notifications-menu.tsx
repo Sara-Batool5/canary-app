@@ -75,7 +75,7 @@ export function NotificationsMenu({ notifications }: { notifications: AppNotific
           />
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-[min(20rem,calc(100vw-2rem))]">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="text-sm font-medium text-foreground">
             Notifications
