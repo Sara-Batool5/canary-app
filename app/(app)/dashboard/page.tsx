@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Upload } from 'lucide-react'
 
 import { PageHeader } from '@/components/app-shell/page-header'
+import { LoadDemoButton } from '@/components/demo/demo-controls'
 import { AttentionTable } from '@/components/dashboard/attention-table'
 import { HealthDistribution } from '@/components/dashboard/health-distribution'
 import { StatCards } from '@/components/dashboard/stat-cards'
@@ -46,12 +47,15 @@ export default async function DashboardPage() {
           <CardHeader className="justify-items-center px-0">
             <CardTitle>No customer data yet</CardTitle>
             <CardDescription>
-              Upload a CSV and Canary will score every account and show who needs attention.
+              Upload a CSV, or load demo data to explore Canary right away.
             </CardDescription>
           </CardHeader>
-          <Link href="/upload" className={buttonVariants({ size: 'lg' })}>
-            Upload customer data
-          </Link>
+          <div className="flex flex-wrap items-start justify-center gap-3">
+            <Link href="/upload" className={buttonVariants({ size: 'lg' })}>
+              Upload customer data
+            </Link>
+            <LoadDemoButton />
+          </div>
         </Card>
       </>
     )

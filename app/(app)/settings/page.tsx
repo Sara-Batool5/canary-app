@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { PageHeader } from '@/components/app-shell/page-header'
+import { ClearDataButton, LoadDemoButton } from '@/components/demo/demo-controls'
 import { ProfileForm } from '@/components/settings/profile-form'
 import { ScoringForm } from '@/components/settings/scoring-form'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +15,9 @@ export default async function SettingsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  const demoEmail = process.env.NEXT_PUBLIC_DEMO_EMAIL?.toLowerCase()
+  const isDemo = Boolean(demoEmail) && user?.email?.toLowerCase() === demoEmail
 
   const name =
     typeof user?.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : ''
@@ -31,7 +35,7 @@ export default async function SettingsPage() {
             <CardDescription>Your name appears in the sidebar and profile menu.</CardDescription>
           </CardHeader>
           <div className="px-6">
-            <ProfileForm initialName={name} email={user?.email ?? ''} />
+            <ProfileForm initialName={name} email={user?.email ?? ''} lockPassword={isDemo} />
           </div>
         </Card>
 
@@ -45,6 +49,20 @@ export default async function SettingsPage() {
           </CardHeader>
           <div className="px-6">
             <ScoringForm initial={getScoringConfig(user)} />
+          </div>
+        </Card>
+
+        <Card className="gap-5 py-6">
+          <CardHeader className="px-6">
+            <CardTitle>Your data</CardTitle>
+            <CardDescription>
+              Load a ready-made demo to explore Canary, or clear everything and start fresh.
+              Demo data can only be loaded when you have no customers.
+            </CardDescription>
+          </CardHeader>
+          <div className="flex flex-wrap items-start gap-3 px-6">
+            <LoadDemoButton size="default" />
+            <ClearDataButton />
           </div>
         </Card>
       </div>

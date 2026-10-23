@@ -8,7 +8,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 
-export function ProfileForm({ initialName, email }: { initialName: string; email: string }) {
+export function ProfileForm({
+  initialName,
+  email,
+  lockPassword = false,
+}: {
+  initialName: string
+  email: string
+  lockPassword?: boolean
+}) {
   const [name, setName] = useState(initialName)
   const [savingName, setSavingName] = useState(false)
   const [nameMessage, setNameMessage] = useState<{ ok: boolean; text: string } | null>(null)
@@ -110,6 +118,11 @@ export function ProfileForm({ initialName, email }: { initialName: string; email
         </div>
       </form>
 
+      {lockPassword ? (
+        <p className="self-start rounded-md border border-border px-4 py-3 text-sm text-muted-foreground">
+          This is the shared demo account, so password changes are turned off.
+        </p>
+      ) : (
       <form onSubmit={handlePassword} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="new-password" className="text-sm font-medium text-foreground">
@@ -146,6 +159,7 @@ export function ProfileForm({ initialName, email }: { initialName: string; email
           </Button>
         </div>
       </form>
+      )}
     </div>
   )
 }

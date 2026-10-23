@@ -17,6 +17,9 @@ const isConfigured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 )
 
+const demoEmail = process.env.NEXT_PUBLIC_DEMO_EMAIL
+const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD
+
 function friendlyError(message: string) {
   const text = message.toLowerCase()
   if (text.includes('invalid login credentials'))
@@ -109,6 +112,29 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
   }
 
+  async function handleDemo() {
+    if (!demoEmail || !demoPassword) return
+    setError(null)
+    setNotice(null)
+    setLoading(true)
+    try {
+      const { error: demoError } = await createClient().auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword,
+      })
+      if (demoError) {
+        setError(friendlyError(demoError.message))
+        return
+      }
+      router.replace('/dashboard')
+      router.refresh()
+    } catch {
+      setError('Something went wrong. Please check your connection and try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -189,6 +215,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
               : 'Log in'}
         </Button>
       </form>
+
+      {!isSignup && demoEmail && demoPassword && (
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-10 w-full"
+          onClick={handleDemo}
+          disabled={loading}
+        >
+          Explore with the demo account
+        </Button>
+      )}
 
       <p className="text-center text-sm text-muted-foreground">
         {isSignup ? 'Already have an account?' : 'New to Canary?'}{' '}

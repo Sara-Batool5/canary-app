@@ -13,7 +13,14 @@ export const metadata: Metadata = {
   },
   description:
     'Canary spots at-risk customers before they churn, so your team can reach out in time.',
-  generator: 'v0.app',
+  applicationName: 'Canary',
+  openGraph: {
+    title: 'Canary — Churn early warning for SaaS',
+    description:
+      'Canary spots at-risk customers before they churn, so your team can reach out in time.',
+    siteName: 'Canary',
+    type: 'website',
+  },
 }
 
 export const viewport: Viewport = {
